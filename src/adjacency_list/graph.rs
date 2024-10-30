@@ -2,7 +2,9 @@ use std::{collections::VecDeque, mem};
 
 use ahash::{HashSet, HashSetExt};
 mod check;
-use crate::{utils::ExtendedVec, Edge, EdgeID, Node, NodeID};
+mod search;
+use crate::adjacency_list::*;
+use crate::utils::ExtendedVec;
 
 /// A graph is a collection of nodes and edges.
 ///
@@ -14,8 +16,8 @@ use crate::{utils::ExtendedVec, Edge, EdgeID, Node, NodeID};
 ///
 /// The graph is weighted, meaning that each edge has a weight. However, the weight can be zero.
 #[derive(Debug, Clone, Default)]
-pub struct Graph {
-    nodes: Vec<Node>,
+pub struct AdjListGraph<T> {
+    nodes: Vec<Node<T>>,
     edges: Vec<Edge>,
 
     // Stores a Queue of empty slots in the edges and nodes arrays.
@@ -27,52 +29,52 @@ macro_rules! index {
     (
         $ty:ty => $array:ident => $output:ty
     ) => {
-        impl std::ops::Index<$ty> for Graph {
+        impl<T> std::ops::Index<$ty> for AdjListGraph<T> {
             type Output = $output;
 
             fn index(&self, index: $ty) -> &Self::Output {
                 &self.$array[index.0]
             }
         }
-        impl std::ops::Index<&$ty> for Graph {
+        impl<T> std::ops::Index<&$ty> for AdjListGraph<T> {
             type Output = $output;
 
             fn index(&self, index: &$ty) -> &Self::Output {
                 &self.$array[index.0]
             }
         }
-        impl std::ops::IndexMut<$ty> for Graph {
+        impl<T> std::ops::IndexMut<$ty> for AdjListGraph<T> {
             fn index_mut(&mut self, index: $ty) -> &mut Self::Output {
                 &mut self.$array[index.0]
             }
         }
-        impl std::ops::IndexMut<&$ty> for Graph {
+        impl<T> std::ops::IndexMut<&$ty> for AdjListGraph<T> {
             fn index_mut(&mut self, index: &$ty) -> &mut Self::Output {
                 &mut self.$array[index.0]
             }
         }
     };
 }
-index!(NodeID => nodes => Node);
+index!(NodeID => nodes => Node<T>);
 index!(EdgeID => edges => Edge);
 
-impl Graph {
+impl<T> AdjListGraph<T> {
     /// Adds a node to the graph.
     ///
     /// # Arguments
     /// * `name` - The name of the node.
     /// # Returns
     /// The ID of the node.
-    pub fn add_node(&mut self, name: String) -> NodeID {
+    pub fn add_node(&mut self, value: T) -> NodeID {
         if let Some(empty_node) = self.empty_node_slots.pop_front() {
             self.nodes[empty_node.0] = Node {
-                name,
+                value: Some(value),
                 edges: HashSet::new(),
             };
             empty_node
         } else {
             self.nodes.push_with_wrapped_id(Node {
-                name,
+                value: Some(value),
                 edges: HashSet::new(),
             })
         }
@@ -109,9 +111,9 @@ impl Graph {
     /// A vector of the nodes connected to the given node.
     ///
     /// ```rust
-    /// use tux_graph::Graph;
+    /// use tux_graph::adjacency_list::AdjListGraph;
     ///
-    /// let mut graph = Graph::default();
+    /// let mut graph = AdjListGraph::default();
     /// let a = graph.add_node("A".to_string());
     /// let b = graph.add_node("B".to_string());
     /// let c = graph.add_node("C".to_string());
@@ -140,9 +142,9 @@ impl Graph {
     }
     /// Returns true if the given node is connected to itself.
     /// ```rust
-    /// use tux_graph::Graph;
+    /// use tux_graph::adjacency_list::AdjListGraph;
     ///
-    /// let mut graph = Graph::default();
+    /// let mut graph = AdjListGraph::default();
     /// let a = graph.add_node("A".to_string());
     /// let b = graph.add_node("B".to_string());
     ///
@@ -202,7 +204,10 @@ impl Graph {
     /// Removes all nodes and edges that are in the unused slots.
     ///
     /// This will update the indexes of the nodes and edges.
-    pub fn remove_dead_values(&mut self) {
+    pub fn remove_dead_values(&mut self)
+    where
+        T: Clone,
+    {
         if !self.empty_edge_slots.is_empty() {
             self.remove_dead_edges();
         }
@@ -210,7 +215,10 @@ impl Graph {
             self.remove_dead_nodes();
         }
     }
-    fn remove_dead_nodes(&mut self) {
+    fn remove_dead_nodes(&mut self)
+    where
+        T: Clone,
+    {
         let Self {
             nodes,
             empty_node_slots,
@@ -307,11 +315,11 @@ impl Graph {
 
 #[cfg(test)]
 mod test {
-    use crate::Graph;
+    use crate::adjacency_list::*;
 
     #[test]
     pub fn basic_graph() {
-        let mut graph = Graph::default();
+        let mut graph = AdjListGraph::default();
         let a = graph.add_node("A".to_string());
         let b = graph.add_node("B".to_string());
         let c = graph.add_node("C".to_string());
@@ -327,7 +335,7 @@ mod test {
     }
     #[test]
     pub fn cleanup_tests() {
-        let mut graph = Graph::default();
+        let mut graph = AdjListGraph::default();
         let a = graph.add_node("A".to_string());
         let b = graph.add_node("B".to_string());
         let c = graph.add_node("C".to_string());

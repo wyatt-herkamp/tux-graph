@@ -1,4 +1,6 @@
-use crate::{utils::macros::id_type, NodeID};
+use crate::utils::macros::id_type;
+
+use super::NodeID;
 
 #[derive(Debug, Clone)]
 pub struct Edge {

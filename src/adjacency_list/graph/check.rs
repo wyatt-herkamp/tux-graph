@@ -1,9 +1,9 @@
 //! The functions defined in this module are used to check if the graph is in a valid state.
 //!
 //! These checks check for things that shouldn't happen in a graph. However, they are great for testing the graph's integrity.
-use super::Graph;
+use super::AdjListGraph;
+use crate::adjacency_list::*;
 use crate::utils::IdType;
-use crate::{Edge, EdgeID, Node, NodeID};
 
 macro_rules! valid_values {
     (
@@ -78,7 +78,7 @@ macro_rules! valid_values {
         }
     };
 }
-impl Graph {
+impl<T> AdjListGraph<T> {
     valid_values! {
         /// Checks if the edge is valid.
         /// Checks if the id exists and if the nodes associated with the edge exist.
@@ -111,12 +111,11 @@ impl Graph {
 
     /// Checks if all the nodes edges exist
     #[inline]
-    fn is_valid_node_inner(&self, node: &Node) -> bool {
-        return node.edges.iter().any(|edge_id| {
-            let value = self.does_edge_id_exist(*edge_id);
-            print!("{node:?} {} ", value);
-            value
-        });
+    fn is_valid_node_inner(&self, node: &Node<T>) -> bool {
+        return node
+            .edges
+            .iter()
+            .any(|edge_id| self.does_edge_id_exist(*edge_id));
     }
     /// Checks if the nodes associated with the edge exist
     #[inline]
@@ -127,10 +126,10 @@ impl Graph {
 
 #[cfg(test)]
 mod tests {
-    use crate::{EdgeID, Graph, NodeID};
+    use crate::adjacency_list::*;
     #[test]
     pub fn test_graph_with_invalid_node() {
-        let mut graph = Graph::default();
+        let mut graph = AdjListGraph::default();
         let a = graph.add_node("Node 1".to_string());
         graph[a].edges.insert(EdgeID(2));
         println!("{:?}", graph);
@@ -138,7 +137,7 @@ mod tests {
     }
     #[test]
     pub fn test_valid_graph() {
-        let mut graph = Graph::default();
+        let mut graph = AdjListGraph::default();
         let a = graph.add_node("Node 1".to_string());
         let b = graph.add_node("Node 2".to_string());
         let _ = graph.connect_nodes(a, b);
@@ -149,7 +148,7 @@ mod tests {
 
     #[test]
     pub fn test_graph_with_invalid_edge() {
-        let mut graph = Graph::default();
+        let mut graph = AdjListGraph::default();
         let a = graph.add_node("Node 1".to_string());
         let b = graph.add_node("Node 2".to_string());
         let edge = graph.connect_nodes(a, b);
