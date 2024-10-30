@@ -1,0 +1,14 @@
+[package]
+name = "tux-graph"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+tracing = "0.1"
+
+ahash = "0.8"
+[dev-dependencies]
+pretty_assertions = "1"
+anyhow = "1"
