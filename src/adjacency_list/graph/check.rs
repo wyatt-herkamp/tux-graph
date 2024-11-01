@@ -151,7 +151,7 @@ mod tests {
         let mut graph = AdjListGraph::default();
         let a = graph.add_node("Node 1".to_string());
         let b = graph.add_node("Node 2".to_string());
-        let edge = graph.connect_nodes(a, b);
+        let edge = graph.connect_nodes(a, b).unwrap();
         graph[edge].node_a = NodeID(2);
         println!("{:?}", graph);
         assert!(graph.has_invalid_edges());

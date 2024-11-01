@@ -1,3 +1,8 @@
+[workspace]
+
+workspace.resolver = "2"
+members = ["tux-graph-macros"]
+
 [package]
 name = "tux-graph"
 version = "0.1.0"
@@ -7,8 +12,12 @@ edition = "2021"
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 tracing = "0.1"
-
+rand = "0.8"
 ahash = "0.8"
+itertools = "0.13"
+
+tux-graph-macros = { path = "tux-graph-macros" }
 [dev-dependencies]
 pretty_assertions = "1"
 anyhow = "1"
+serde_json = "1"

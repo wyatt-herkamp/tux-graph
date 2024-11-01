@@ -50,6 +50,17 @@ macro_rules! id_type {
                 Self(id)
             }
         }
+        impl serde::Serialize for $ty {
+            fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                self.0.serialize(serializer)
+            }
+        }
+        impl<'de> serde::Deserialize<'de> for $ty {
+            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                let id = usize::deserialize(deserializer)?;
+                Ok(Self(id))
+            }
+        }
     };
 }
 pub(crate) use id_type;
